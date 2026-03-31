@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Gems 커스텀 AI 에이전트 구축 가이드</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #1e1e24;
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 40px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #4facfe;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #00f2fe;
+            margin-top: 40px;
+        }
+        .section-card {
+            background-color: #2b2b36;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .highlight {
+            color: #f6d365;
+            font-weight: bold;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .prompt-box {
+            background-color: #1a1a20;
+            border-left: 4px solid #4facfe;
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-family: "D2Coding", "Consolas", monospace;
+            color: #a9b7c6;
+            white-space: pre-wrap;
+        }
+        .badge {
+            display: inline-block;
+            background-color: #4facfe;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>[Gemini Gems 매뉴얼] 커스텀 AI 에이전트 구축 가이드</h1>
+
+    <div class="section-card">
+        <h2>1. Gems(젬스)의 본질: 영구적인 시스템 프롬프트</h2>
+        <p>Gems는 단순히 채팅창을 새로 파는 게 아니라, <span class="highlight">'특정 페르소나와 출력 규칙(Output Format)이 고정된 컨테이너'</span>를 생성하는 기능입니다. 복잡한 시스템 구조를 잡거나, 반복적인 텍스트/코드 변환 작업을 할 때 룰(Rule)을 한 번만 세팅해 두면 이후에는 변수(Input)만 던져서 원하는 결괏값을 즉시 뽑아낼 수 있습니다.</p>
+    </div>
+
+    <div class="section-card">
+        <h2>2. Use Case 1: 출력 포맷 강제화 (이메일/메시지 봇)</h2>
+        <p>단순 번역을 넘어, 상황별 톤앤매너 분기와 출력 형태를 강제하는 구조입니다. 한 번의 입력으로 3가지 버전의 결괏값을 동시에 리턴받아 복붙 속도를 극대화하는 것이 핵심입니다.</p>
+        <ul>
+            <li><span class="badge">역할</span> 비즈니스 이메일 전문 번역가</li>
+            <li><span class="badge">분기 처리</span> Professional (격식), Friendly (친근함), Concise (핵심 요약) 동시 생성</li>
+            <li><span class="badge">출력 형식</span> 무조건 마크다운 <code>코드 블록</code> 안에 넣어 출력</li>
+        </ul>
+        <div class="prompt-box">💡 실전 프롬프트 세팅 예시 (Gems 지시사항에 복붙)
+
+너는 글로벌 비즈니스 이메일 번역 전문가야. 내가 한국어 문장을 입력하면 다음 규칙을 무조건 엄수해서 영어로 출력해.
+
+1. 서론, 결론, 부연 설명 등 잡담은 일절 출력하지 마.
+2. 다음 3가지 버전으로 각각 번역해.
+   - Professional: 격식 있고 정중한 비즈니스 톤
+   - Friendly: 부드럽고 친근한 동료 톤
+   - Concise: 핵심만 전달하는 간결한 톤
+3. 각 버전의 결과물은 반드시 `코드 블록` 안에 작성해서 내가 바로 복사할 수 있게 해.</div>
+    </div>
+
+    <div class="section-card">
+        <h2>3. Use Case 2: 로직 검증 & 사고 확장 (제1원칙 사고 봇)</h2>
+        <p>머릿속 아이디어나 기획안을 던지면, 맹점을 찾아내고 소크라테스식 문답법으로 뼈대를 다듬어주는 봇입니다. 기술적 이상 신호를 잡거나 아키텍처를 설계할 때 '벽치기(Rubber Ducking)' 용도로 최적화되어 있습니다.</p>
+        <ul>
+            <li><span class="badge">역할</span> 일론 머스크 수준의 '제1원칙 사고(First Principles Thinking)' 멘토</li>
+            <li><span class="badge">프로세스</span> 분해(Deconstruct) → 검증(Validate) → 역질문(Questioning)</li>
+        </ul>
+        <div class="prompt-box">💡 실전 프롬프트 세팅 예시 (Gems 지시사항에 복붙)
+
+너는 제1원칙 사고를 기반으로 문제를 해결하는 날카로운 전략가야. 내가 기획안이나 고민을 입력하면 다음 순서로 프로세스를 돌려.
+
+1. 내 생각 속에 깔려 있는 '숨은 전제'들을 리스트업 해.
+2. 그 전제들 중 논리적 비약이나 맹점이 있는 부분을 가차 없이 지적해.
+3. 문제를 가장 기본적인 단위(Base Elements)로 쪼개서 보여줘.
+4. 결론을 내주지 말고, 내가 스스로 더 나은 구조를 짤 수 있도록 핵심을 찌르는 역질문을 1~2개 던져.</div>
+    </div>
+
+    <div class="section-card">
+        <h2>4. 프롬프트 엔지니어링 팁 (성능 극대화)</h2>
+        <p>Gems의 성능은 초기 '지시사항(System Prompt)'을 코딩 예외 처리하듯 얼마나 촘촘하게 짜느냐에 달렸습니다.</p>
+        <ul>
+            <li><strong>구체적인 역할 부여:</strong> "번역해 줘" (X) → "너는 실리콘밸리 IT 기업의 10년 차 B2B 세일즈 매니저야" (O)</li>
+            <li><strong>출력 제한 걸기:</strong> AI 특유의 쓸데없는 인사말을 막기 위해 <code>[잡담 금지, 결과값만 출력할 것]</code>을 명시하세요.</li>
+            <li><strong>퓨샷 프롬프팅(Few-shot):</strong> 지시사항 하단에 직접 쓴 예시 데이터(Input/Output)를 넣어두면 AI가 톤앤매너와 구조를 완벽하게 모방합니다.</li>
+        </ul>
+    </div>
+
+</body>
+</html>
