@@ -73,6 +73,12 @@ const API = {
             case "done":
                 callbacks.onDone(data);
                 break;
+            case "review_start":
+                if (callbacks.onReviewStart) callbacks.onReviewStart();
+                break;
+            case "review_done":
+                if (callbacks.onReviewDone) callbacks.onReviewDone(data);
+                break;
             case "error":
                 callbacks.onError(data.message);
                 break;

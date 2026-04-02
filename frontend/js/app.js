@@ -166,6 +166,7 @@ async function translate() {
 
     UI.setTranslating(true);
     UI.clearResults();
+    UI.hideReview();
     UI.showNormalizedCard();
 
     let translationsShown = false;
@@ -188,7 +189,17 @@ async function translate() {
             }
             UI.appendTranslation(tone, token);
         },
+        onReviewStart() {
+            UI.showReviewStart();
+        },
+        onReviewDone(review) {
+            UI.showReviewDone(review);
+        },
         onDone(data) {
+            // If review revised the translations, update the cards
+            if (data.professional) UI.els.textProfessional.textContent = data.professional;
+            if (data.friendly) UI.els.textFriendly.textContent = data.friendly;
+            if (data.concise) UI.els.textConcise.textContent = data.concise;
             UI.finishTranslations(data);
             currentResults = { ...currentResults, ...data };
 

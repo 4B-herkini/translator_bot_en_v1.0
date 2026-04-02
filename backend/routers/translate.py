@@ -4,8 +4,11 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from anthropic import Anthropic
 from openai import OpenAI
 
-from backend.config import PROVIDERS, DEFAULT_PROVIDER, MAX_TOKENS, TEMPERATURE, MAX_INPUT_LENGTH
-from backend.prompts.translation import SYSTEM_PROMPT, SYSTEM_PROMPT_GROK
+from backend.config import (
+    PROVIDERS, DEFAULT_PROVIDER, MAX_TOKENS, TEMPERATURE, MAX_INPUT_LENGTH,
+    ANTHROPIC_API_KEY, REVIEW_MODEL, REVIEW_MAX_TOKENS, REVIEW_TEMPERATURE,
+)
+from backend.prompts.translation import SYSTEM_PROMPT, SYSTEM_PROMPT_GROK, REVIEW_PROMPT
 
 router = APIRouter()
 
@@ -52,16 +55,22 @@ def stream_openai(text: str, api_key: str, model: str, system_prompt: str, base_
     if base_url:
         kwargs["base_url"] = base_url
     client = OpenAI(**kwargs)
-    stream = client.chat.completions.create(
-        model=model,
-        temperature=TEMPERATURE,
-        max_tokens=MAX_TOKENS,
-        stream=True,
-        messages=[
+    params = {
+        "model": model,
+        "temperature": TEMPERATURE,
+        "stream": True,
+        "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text},
         ],
-    )
+    }
+    # GPT-5 series uses max_completion_tokens and doesn't support temperature
+    if model.startswith("gpt-5"):
+        params["max_completion_tokens"] = MAX_TOKENS
+        del params["temperature"]
+    else:
+        params["max_tokens"] = MAX_TOKENS
+    stream = client.chat.completions.create(**params)
     for chunk in stream:
         delta = chunk.choices[0].delta
         if delta.content:
@@ -79,6 +88,86 @@ def get_token_stream(text: str, provider_id: str):
         if provider_id == "grok":
             base_url = "https://api.x.ai/v1"
         yield from stream_openai(text, provider["api_key"], provider["model"], system_prompt, base_url)
+
+
+REVIEW_MARKERS = {
+    "[REVIEW]": "review",
+    "[/REVIEW]": "review_done",
+    "[REVISED_PROFESSIONAL]": "revised_professional",
+    "[/REVISED_PROFESSIONAL]": "revised_professional_done",
+    "[REVISED_FRIENDLY]": "revised_friendly",
+    "[/REVISED_FRIENDLY]": "revised_friendly_done",
+    "[REVISED_CONCISE]": "revised_concise",
+    "[/REVISED_CONCISE]": "revised_concise_done",
+}
+
+
+def run_review(original_text: str, translations: dict) -> dict | None:
+    if not ANTHROPIC_API_KEY:
+        return None
+
+    client = Anthropic(api_key=ANTHROPIC_API_KEY)
+
+    review_input = f"""## Original Input
+{original_text}
+
+## Normalized
+{translations['normalized']}
+
+## Professional
+{translations['professional']}
+
+## Friendly
+{translations['friendly']}
+
+## Concise
+{translations['concise']}"""
+
+    response = client.messages.create(
+        model=REVIEW_MODEL,
+        max_tokens=REVIEW_MAX_TOKENS,
+        temperature=REVIEW_TEMPERATURE,
+        system=REVIEW_PROMPT,
+        messages=[{"role": "user", "content": review_input}],
+    )
+
+    result_text = response.content[0].text
+    return parse_review_response(result_text)
+
+
+def parse_review_response(text: str) -> dict:
+    result = {}
+    sections = {
+        "review": "",
+        "changes": "",
+        "revised_professional": "",
+        "revised_friendly": "",
+        "revised_concise": "",
+    }
+
+    tag_map = {
+        "[REVIEW]": "review", "[/REVIEW]": None,
+        "[CHANGES]": "changes", "[/CHANGES]": None,
+        "[REVISED_PROFESSIONAL]": "revised_professional", "[/REVISED_PROFESSIONAL]": None,
+        "[REVISED_FRIENDLY]": "revised_friendly", "[/REVISED_FRIENDLY]": None,
+        "[REVISED_CONCISE]": "revised_concise", "[/REVISED_CONCISE]": None,
+    }
+
+    current = None
+    for line in text.split("\n"):
+        stripped = line.strip()
+        if stripped in tag_map:
+            current = tag_map[stripped]
+        elif current:
+            sections[current] += line + "\n"
+
+    result["summary"] = sections["review"].strip()
+    result["changes"] = sections["changes"].strip()
+    result["revised_professional"] = sections["revised_professional"].strip()
+    result["revised_friendly"] = sections["revised_friendly"].strip()
+    result["revised_concise"] = sections["revised_concise"].strip()
+
+    return result
 
 
 def parse_and_stream(text: str, provider_id: str):
@@ -150,12 +239,37 @@ def parse_and_stream(text: str, provider_id: str):
         else:
             yield sse_event("translation", {"tone": current_section, "token": buffer})
 
-    yield sse_event("done", {
+    # --- Review phase ---
+    original_results = {
         "normalized": section_contents["normalization"].strip(),
         "professional": section_contents["professional"].strip(),
         "friendly": section_contents["friendly"].strip(),
         "concise": section_contents["concise"].strip(),
-    })
+    }
+
+    if ANTHROPIC_API_KEY:
+        yield sse_event("review_start", {})
+        try:
+            review_result = run_review(text, original_results)
+            if review_result:
+                yield sse_event("review_done", review_result)
+                # Use revised translations if available
+                final = {
+                    "normalized": original_results["normalized"],
+                    "professional": review_result.get("revised_professional", original_results["professional"]),
+                    "friendly": review_result.get("revised_friendly", original_results["friendly"]),
+                    "concise": review_result.get("revised_concise", original_results["concise"]),
+                    "review": review_result,
+                }
+                yield sse_event("done", final)
+            else:
+                yield sse_event("done", original_results)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            yield sse_event("done", original_results)
+    else:
+        yield sse_event("done", original_results)
 
 
 @router.get("/providers")

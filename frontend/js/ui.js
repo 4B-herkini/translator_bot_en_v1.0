@@ -87,6 +87,36 @@ const UI = {
         }, 5000);
     },
 
+    // Review
+    showReviewStart() {
+        const card = document.getElementById("review-card");
+        card.classList.remove("hidden");
+        card.classList.add("reviewing");
+        document.getElementById("review-label").textContent = "검수 중... (Claude Sonnet)";
+        document.getElementById("review-summary").textContent = "";
+        document.getElementById("review-changes").textContent = "";
+    },
+
+    showReviewDone(review) {
+        const card = document.getElementById("review-card");
+        card.classList.remove("reviewing");
+        document.getElementById("review-label").textContent = "검수 완료";
+        document.getElementById("review-summary").textContent = review.summary || "수정 없음 — 번역 품질 양호";
+        const changesEl = document.getElementById("review-changes");
+        if (review.changes && review.changes !== "변경 없음") {
+            changesEl.textContent = review.changes;
+            changesEl.style.display = "";
+        } else {
+            changesEl.style.display = "none";
+        }
+    },
+
+    hideReview() {
+        const card = document.getElementById("review-card");
+        card.classList.add("hidden");
+        card.classList.remove("reviewing");
+    },
+
     // History panel
     toggleHistoryPanel(show) {
         const open = show !== undefined ? show : !this.els.historyPanel.classList.contains("open");
@@ -131,6 +161,12 @@ const UI = {
         this.els.textFriendly.textContent = entry.friendly || "";
         this.els.textConcise.textContent = entry.concise || "";
         this._removeStreaming();
+        // Restore review if exists
+        if (entry.review) {
+            this.showReviewDone(entry.review);
+        } else {
+            this.hideReview();
+        }
         this.toggleHistoryPanel(false);
     },
 
