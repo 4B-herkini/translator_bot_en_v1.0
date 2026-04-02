@@ -7,6 +7,12 @@ Desktop.ini
 .vscode/
 .idea/
 
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+
 # Misc
 *.log
 *.tmp

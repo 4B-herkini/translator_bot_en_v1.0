@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TransLit — AI Business Translation</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1 class="header__title">TransLit</h1>
+        <div class="header__actions">
+            <button id="btn-settings" class="btn-icon" title="설정">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+            </button>
+            <button id="btn-history" class="btn-icon" title="히스토리">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span id="history-badge" class="badge hidden">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Input Section -->
+        <div class="card input-card">
+            <textarea id="input-text" class="input-textarea" placeholder="아무렇게나 입력하세요. 맞춤법, 어순, 띄어쓰기 신경 쓰지 마세요." rows="4"></textarea>
+            <div class="input-actions">
+                <div class="input-actions__left">
+                    <div id="provider-selector" class="provider-selector">
+                        <button class="provider-btn active" data-provider="claude" title="일반 번역 — 자연스럽고 맥락 파악 우수">Claude</button>
+                        <button class="provider-btn" data-provider="gpt" title="전문 번역 — 기술/법률/의료 용어 강점">GPT</button>
+                        <button class="provider-btn" data-provider="grok" title="직설 번역 — 필터 없이 원문 뉘앙스 그대로">Grok</button>
+                    </div>
+                    <span id="char-count" class="char-count">0 / 3,000</span>
+                </div>
+                <div class="input-actions__right">
+                    <div id="voice-lang-toggle" class="voice-lang-toggle hidden">
+                        <button id="btn-voice-ko" class="btn-lang active" data-lang="ko-KR">KO</button>
+                        <button id="btn-voice-en" class="btn-lang" data-lang="en-US">EN</button>
+                    </div>
+                    <button id="btn-mic" class="btn-mic hidden" title="음성 입력">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                    </button>
+                    <button id="btn-translate" class="btn-translate">번역하기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Normalized Output -->
+        <div id="normalized-card" class="card result-card normalized-card hidden">
+            <div class="result-card__header">
+                <span class="result-card__label">정제된 원문</span>
+                <div class="result-card__actions">
+                    <button class="btn-sm btn-edit" data-action="edit" title="수정하기">수정</button>
+                    <button class="btn-sm btn-copy" data-target="normalized-text" title="복사">복사</button>
+                </div>
+            </div>
+            <div id="normalized-text" class="result-card__content"></div>
+        </div>
+
+        <!-- Translation Results -->
+        <div id="translations-grid" class="translations-grid hidden">
+            <div class="card result-card tone-card tone-professional">
+                <div class="result-card__header">
+                    <span class="result-card__label">Professional</span>
+                    <button class="btn-sm btn-copy" data-target="text-professional" title="복사">복사</button>
+                </div>
+                <div id="text-professional" class="result-card__content"></div>
+            </div>
+            <div class="card result-card tone-card tone-friendly">
+                <div class="result-card__header">
+                    <span class="result-card__label">Friendly</span>
+                    <button class="btn-sm btn-copy" data-target="text-friendly" title="복사">복사</button>
+                </div>
+                <div id="text-friendly" class="result-card__content"></div>
+            </div>
+            <div class="card result-card tone-card tone-concise">
+                <div class="result-card__header">
+                    <span class="result-card__label">Concise</span>
+                    <button class="btn-sm btn-copy" data-target="text-concise" title="복사">복사</button>
+                </div>
+                <div id="text-concise" class="result-card__content"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- History Panel -->
+    <div id="history-panel" class="panel hidden">
+        <div class="panel__header">
+            <h2 class="panel__title">번역 히스토리</h2>
+            <div class="panel__header-actions">
+                <button id="btn-clear-history" class="btn-sm btn-danger">전체 삭제</button>
+                <button id="btn-close-history" class="btn-icon btn-close">&times;</button>
+            </div>
+        </div>
+        <input id="history-search" class="history-search" type="text" placeholder="검색...">
+        <div id="history-list" class="history-list"></div>
+    </div>
+    <div id="panel-overlay" class="panel-overlay hidden"></div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2 class="modal__title">설정</h2>
+                <button id="btn-close-settings" class="btn-icon btn-close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <label class="form-label" for="api-key-input">Anthropic API Key</label>
+                <div class="api-key-wrapper">
+                    <input id="api-key-input" type="password" class="form-input" placeholder="sk-ant-...">
+                    <button id="btn-toggle-key" class="btn-sm">표시</button>
+                </div>
+                <p class="form-hint">서버에 키가 설정된 경우 비워두면 서버 키를 사용합니다.</p>
+                <button id="btn-save-settings" class="btn-translate" style="margin-top:16px;width:100%;">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/clipboard.js"></script>
+    <script src="/js/history.js"></script>
+    <script src="/js/voice.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
