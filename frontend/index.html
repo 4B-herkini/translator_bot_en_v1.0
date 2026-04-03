@@ -30,6 +30,33 @@
         <!-- Input Section -->
         <div class="card input-card">
             <textarea id="input-text" class="input-textarea" placeholder="아무렇게나 입력하세요. 맞춤법, 어순, 띄어쓰기 신경 쓰지 마세요." rows="4"></textarea>
+
+            <!-- Voice Section (Change 2) -->
+            <div id="voice-section" class="voice-section hidden">
+                <button id="btn-mic" class="btn-mic-hero" title="음성 입력">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                    <span class="mic-label">음성으로 입력</span>
+                </button>
+                <div class="voice-lang-toggle">
+                    <button id="btn-voice-ko" class="btn-lang active" data-lang="ko-KR">KO</button>
+                    <button id="btn-voice-en" class="btn-lang" data-lang="en-US">EN</button>
+                </div>
+            </div>
+
+            <!-- Recording Feedback Bar -->
+            <div id="recording-bar" class="recording-bar hidden">
+                <div class="recording-bar__indicator">
+                    <span class="recording-dot"></span>
+                    <span class="recording-bar__label">듣고 있어요...</span>
+                </div>
+                <div class="recording-bar__waveform">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <button id="btn-stop-recording" class="btn-sm btn-stop">중지</button>
+            </div>
+
             <div class="input-actions">
                 <div class="input-actions__left">
                     <div id="provider-selector" class="provider-selector">
@@ -40,52 +67,53 @@
                     <span id="char-count" class="char-count">0 / 3,000</span>
                 </div>
                 <div class="input-actions__right">
-                    <div id="voice-lang-toggle" class="voice-lang-toggle hidden">
-                        <button id="btn-voice-ko" class="btn-lang active" data-lang="ko-KR">KO</button>
-                        <button id="btn-voice-en" class="btn-lang" data-lang="en-US">EN</button>
-                    </div>
-                    <button id="btn-mic" class="btn-mic hidden" title="음성 입력">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
-                        </svg>
-                    </button>
                     <button id="btn-translate" class="btn-translate">번역하기</button>
                 </div>
             </div>
         </div>
 
-        <!-- Normalized Output -->
+        <!-- Normalized Output (Change 1: Diff Hero) -->
         <div id="normalized-card" class="card result-card normalized-card hidden">
             <div class="result-card__header">
-                <span class="result-card__label">정제된 원문</span>
+                <span class="result-card__label">입력 정제</span>
                 <div class="result-card__actions">
-                    <button class="btn-sm btn-edit" data-action="edit" title="수정하기">수정</button>
+                    <button class="btn-sm btn-edit" data-action="edit" title="정제된 텍스트로 수정">수정</button>
                     <button class="btn-sm btn-copy" data-target="normalized-text" title="복사">복사</button>
                 </div>
+            </div>
+            <div id="normalized-original" class="norm-diff__original"></div>
+            <div id="normalized-arrow" class="norm-diff__arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
             </div>
             <div id="normalized-text" class="result-card__content"></div>
         </div>
 
-        <!-- Translation Results -->
+        <!-- Translation Results (Change 3: actions wrapper for badges) -->
         <div id="translations-grid" class="translations-grid hidden">
             <div class="card result-card tone-card tone-professional">
                 <div class="result-card__header">
                     <span class="result-card__label">Professional</span>
-                    <button class="btn-sm btn-copy" data-target="text-professional" title="복사">복사</button>
+                    <div class="result-card__actions">
+                        <button class="btn-sm btn-copy" data-target="text-professional" title="복사">복사</button>
+                    </div>
                 </div>
                 <div id="text-professional" class="result-card__content"></div>
             </div>
             <div class="card result-card tone-card tone-friendly">
                 <div class="result-card__header">
                     <span class="result-card__label">Friendly</span>
-                    <button class="btn-sm btn-copy" data-target="text-friendly" title="복사">복사</button>
+                    <div class="result-card__actions">
+                        <button class="btn-sm btn-copy" data-target="text-friendly" title="복사">복사</button>
+                    </div>
                 </div>
                 <div id="text-friendly" class="result-card__content"></div>
             </div>
             <div class="card result-card tone-card tone-concise">
                 <div class="result-card__header">
                     <span class="result-card__label">Concise</span>
-                    <button class="btn-sm btn-copy" data-target="text-concise" title="복사">복사</button>
+                    <div class="result-card__actions">
+                        <button class="btn-sm btn-copy" data-target="text-concise" title="복사">복사</button>
+                    </div>
                 </div>
                 <div id="text-concise" class="result-card__content"></div>
             </div>

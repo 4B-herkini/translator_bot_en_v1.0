@@ -253,34 +253,106 @@ body {
     padding: 4px 8px;
 }
 
-/* ===== Mic Button ===== */
-.btn-mic {
-    background: none;
-    border: 2px solid var(--text-muted);
-    color: var(--text-secondary);
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
+/* ===== Voice Section (Change 2) ===== */
+.voice-section {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 12px;
+    padding: 10px 0 4px;
+}
+
+.btn-mic-hero {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-secondary);
+    padding: 10px 20px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: var(--font-system);
     transition: all var(--transition);
 }
 
-.btn-mic:hover {
+.btn-mic-hero:hover {
     border-color: var(--accent-primary);
     color: var(--accent-primary);
+    background: rgba(79, 172, 254, 0.05);
 }
 
-.btn-mic.recording {
-    border-color: var(--accent-danger);
+.mic-label {
+    font-weight: 500;
+}
+
+/* Recording Bar */
+.recording-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid rgba(255, 107, 107, 0.2);
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.recording-bar__indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recording-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-danger);
+    animation: pulse-dot 1.2s infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.recording-bar__label {
+    font-size: 0.9rem;
     color: var(--accent-danger);
-    animation: pulse-mic 1.5s infinite;
+    font-weight: 500;
 }
 
-@keyframes pulse-mic {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
-    50% { box-shadow: 0 0 0 8px rgba(255, 107, 107, 0); }
+.recording-bar__waveform {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 28px;
+}
+
+.recording-bar__waveform span {
+    display: block;
+    width: 4px;
+    background: var(--accent-danger);
+    border-radius: 2px;
+    animation: waveform 0.8s ease-in-out infinite;
+}
+
+.recording-bar__waveform span:nth-child(1) { height: 8px; animation-delay: 0s; }
+.recording-bar__waveform span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+.recording-bar__waveform span:nth-child(3) { height: 24px; animation-delay: 0.2s; }
+.recording-bar__waveform span:nth-child(4) { height: 16px; animation-delay: 0.3s; }
+.recording-bar__waveform span:nth-child(5) { height: 8px; animation-delay: 0.4s; }
+
+@keyframes waveform {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+}
+
+.btn-stop {
+    color: var(--accent-danger);
+    border: 1px solid rgba(255, 107, 107, 0.3);
 }
 
 /* ===== Voice Language Toggle ===== */
@@ -345,6 +417,88 @@ body {
 
 .normalized-card .result-card__label {
     color: var(--accent-primary);
+}
+
+/* Normalization Diff (Change 1) */
+.norm-diff__original {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    white-space: pre-wrap;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.4s ease, max-height 0.4s ease;
+}
+
+.norm-diff__original.visible {
+    opacity: 1;
+    max-height: 500px;
+}
+
+.norm-diff__arrow {
+    text-align: center;
+    color: var(--accent-primary);
+    margin-bottom: 6px;
+    opacity: 0;
+    transition: opacity 0.4s ease 0.2s;
+}
+
+.norm-diff__arrow.visible {
+    opacity: 1;
+}
+
+.diff-removed {
+    text-decoration: line-through;
+    color: rgba(255, 107, 107, 0.8);
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 2px;
+    padding: 1px 3px;
+}
+
+.diff-added {
+    color: var(--accent-secondary);
+    background: rgba(0, 242, 254, 0.1);
+    border-radius: 2px;
+    padding: 1px 3px;
+}
+
+.diff-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-right: 6px;
+}
+
+.diff-clean {
+    color: var(--accent-secondary);
+    font-size: 0.85rem;
+}
+
+/* Review Badge on Tone Cards (Change 3) */
+.review-badge {
+    background: rgba(246, 211, 101, 0.15);
+    color: var(--accent-highlight);
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(246, 211, 101, 0.3);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.review-badge:hover {
+    background: rgba(246, 211, 101, 0.25);
+}
+
+.review-badge.active {
+    background: rgba(246, 211, 101, 0.25);
+    border-color: var(--accent-highlight);
 }
 
 /* Tone cards */

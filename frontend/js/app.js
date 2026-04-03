@@ -54,7 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Mic button
-    UI.els.btnMic.addEventListener("click", toggleVoice);
+    document.getElementById("btn-mic").addEventListener("click", toggleVoice);
+
+    // Stop recording button
+    document.getElementById("btn-stop-recording").addEventListener("click", toggleVoice);
 
     // Provider selector
     document.querySelectorAll(".provider-btn").forEach((btn) => {
@@ -164,6 +167,9 @@ async function translate() {
     if (!text) return;
     if (text.length > MAX_INPUT) return;
 
+    const originalInput = text; // Save for diff comparison
+    let preReviewResults = {}; // Save pre-review translations for badge comparison
+
     UI.setTranslating(true);
     UI.clearResults();
     UI.hideReview();
@@ -181,6 +187,8 @@ async function translate() {
         onNormalizationDone(fullText) {
             UI.finishNormalization(fullText);
             currentResults.normalized = fullText;
+            // Show diff comparison (Change 1)
+            UI.showNormalizationDiff(originalInput, fullText);
         },
         onTranslation(tone, token) {
             if (!translationsShown) {
@@ -190,17 +198,29 @@ async function translate() {
             UI.appendTranslation(tone, token);
         },
         onReviewStart() {
+            // Capture pre-review translations for badge comparison
+            preReviewResults = {
+                professional: UI.els.textProfessional.textContent,
+                friendly: UI.els.textFriendly.textContent,
+                concise: UI.els.textConcise.textContent,
+            };
             UI.showReviewStart();
         },
         onReviewDone(review) {
             UI.showReviewDone(review);
         },
         onDone(data) {
-            // If review revised the translations, update the cards
+            // Update cards with final (possibly revised) translations
             if (data.professional) UI.els.textProfessional.textContent = data.professional;
             if (data.friendly) UI.els.textFriendly.textContent = data.friendly;
             if (data.concise) UI.els.textConcise.textContent = data.concise;
             UI.finishTranslations(data);
+
+            // Show review badges on changed tone cards (Change 3)
+            if (preReviewResults.professional) {
+                UI.showReviewBadges(preReviewResults, data);
+            }
+
             currentResults = { ...currentResults, ...data };
 
             // Save to history
